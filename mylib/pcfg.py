@@ -3,7 +3,7 @@ from json import loads, dumps
 
 
 class PCFG:
-    RARE_WORD_COUNT = 5
+    RARE_WORD_COUNT = 0
 
     def __init__(self):
         self.q1 = defaultdict(float)
@@ -16,10 +16,14 @@ class PCFG:
 
     def __build_caches(self):
         self.N = set()
+        self.POS = set()
+        self.unary_rules = defaultdict(list)
         self.binary_rules = defaultdict(list)
 
-        for x, _ in self.q1.keys():
+        for x, y1 in self.q1.keys():
             self.N.add(x)
+            self.POS.add(x)
+            self.unary_rules[x].append(y1)
 
         for x, y1, y2 in self.q2.keys():
             self.N.update(set([x, y1, y2]))

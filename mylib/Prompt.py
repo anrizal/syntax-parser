@@ -40,7 +40,7 @@ class Prompt(Cmd):
         print("Time: %.2fs\n" % (time() - start), file=stderr)
 
     def help_extract_grammar(self):
-        print("usage: extract grammar input-path-to-TREEBANK output-path-to-GRAMMAR")
+        print("usage: extract_grammar input-path-to-TREEBANK output-path-to-GRAMMAR")
 
     def do_eval(self, inp):
         i = inp.split()
