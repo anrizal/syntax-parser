@@ -1,14 +1,8 @@
 """
-Extension of 
+Extension of
 CKY algorithm from the "Natural Language Processing" course by Michael Collins
 https://class.coursera.org/nlangp-001/class
 """
-import sys
-from sys import stdin, stderr
-from time import time
-from json import dumps
-from mylib.pcfg import PCFG
-
 from collections import defaultdict
 from pprint import pprint
 
@@ -20,11 +14,12 @@ def argmax(lst):
 def backtrace(back, bp):
     # ADD YOUR CODE HERE
     # Extract the tree from the backpointers
-    if not back: return None
+    if not back:
+        return None
     if len(back) == 6:
         (C, C1, C2, Min, Mid, Max) = back
-        return [C, backtrace(bp[Min  , Mid, C1], bp),
-                   backtrace(bp[Mid+1, Max, C2], bp)]
+        return [C, backtrace(bp[Min, Mid, C1], bp),
+                backtrace(bp[Mid+1, Max, C2], bp)]
     else:
         (C, C1, Min, Min) = back
         return [C, C1]
@@ -36,10 +31,10 @@ def Earley(pcfg, norm_words):
 
 
 def CKY(pcfg, norm_words):
-    # NOTE: norm_words is a list of pairs (norm, word), where word is the word 
-    #       occurring in the input sentence and norm is either the same word, 
-    #       if it is a known word according to the grammar, or the string _RARE_. 
-    #       Thus, norm should be used for grammar lookup but word should be used 
+    # NOTE: norm_words is a list of pairs (norm, word), where word is the word
+    #       occurring in the input sentence and norm is either the same word,
+    #       if it is a known word according to the grammar, or the string _RARE_.
+    #       Thus, norm should be used for grammar lookup but word should be used
     #       in the output tree.
 
     # Initialize your charts (for scores and backpointers)
@@ -60,17 +55,18 @@ def CKY(pcfg, norm_words):
             Max = Min+l
             for C in pcfg.N:
                 score, back = argmax([(
-                        pcfg.q2[C, C1, C2] * pi[Min, Mid, C1] * pi[Mid+1, Max, C2],
-                        (C, C1, C2, Min, Mid, Max)
+                    pcfg.q2[C, C1, C2] * pi[Min, Mid, C1] * pi[Mid+1, Max, C2],
+                    (C, C1, C2, Min, Mid, Max)
                     ) for Mid in range(Min, Max)
                         for C1, C2 in pcfg.binary_rules[C]
                             if pi[Min, Mid, C1] > 0.0
                             if pi[Mid+1, Max, C2] > 0.0
                 ])
-                
+
                 if score > 0.0:
                     bp[Min, Max, C], pi[Min, Max, C] = back, score
-    # Below is one option for retrieving the best trees, assuming we only want trees with the "S" category
+    # Below is one option for retrieving the best trees,
+    # assuming we only want trees with the "S" category
     # This is a simplification, since not all sentences are of the category "S"
     # The exact arguments also depends on how you implement your back-pointer chart.
     # Below it is also assumed that it is called "bp"
@@ -82,7 +78,7 @@ class Parser:
     def __init__(self, pcfg):
         self.pcfg = pcfg
         self.tokenizer = PennTreebankTokenizer()
-    
+
     def normalize_sentence(self, sentence):
         words = self.tokenizer.tokenize(sentence)
         norm_words = []
@@ -94,13 +90,12 @@ class Parser:
         tree = CKY(self.pcfg, self.normalize_sentence(sentence))
         tree[0] = tree[0].split("|")[0]
         return tree
-    
+
     def parse_Earley(self, sentence):
         # TODO: implement Earley algorithm
         tree = Earley(self.pcfg, self.normalize_sentence(sentence))
         tree[0] = tree[0].split("|")[0]
         return tree
-    
+
 def display_tree(tree):
     pprint(tree)
-

@@ -1,11 +1,11 @@
-from mylib.pcfg import PCFG
-from mylib.eval import ParseEvaluator
-from mylib.parser import Parser
 from sys import stdin, stderr
 from cmd import Cmd
 from time import time
 import sys, re, json
 from json import dumps
+from mylib.pcfg import PCFG
+from mylib.eval import ParseEvaluator
+from mylib.parser import Parser
 
 '''
 Created by Arradi Nur Rizal
@@ -14,23 +14,23 @@ For Syntactic Parsing Project
 
 class Prompt(Cmd):
     def preloop(self):
-        super(Prompt,self).preloop()
+        super(Prompt, self).preloop()
         self.algo = "CKY"
 
     prompt = 'cmd>> '
- 
+
     def do_exit(self, inp):
         print("Bye")
         return True
-    
+
     def help_exit(self):
         print('exit the application. Shorthand: x q Ctrl-D.')
-    
+
     def do_extract_grammar(self, inp):
         i = inp.split()
         treebank_file = i[0]
         grammar_file = i[1]
-    
+
         start = time()
         print("Extracting grammar from " + treebank_file + " ...", file=stderr)
         pcfg = PCFG()
@@ -38,10 +38,10 @@ class Prompt(Cmd):
         print("Saving grammar to " + grammar_file + " ...", file=stderr)
         pcfg.save_model(grammar_file)
         print("Time: %.2fs\n" % (time() - start), file=stderr)
-    
+
     def help_extract_grammar(self):
         print("usage: extract grammar input-path-to-TREEBANK output-path-to-GRAMMAR")
- 
+
     def do_eval(self, inp):
         i = inp.split()
         key_file = open(i[0])
@@ -52,10 +52,11 @@ class Prompt(Cmd):
         evaluator = ParseEvaluator()
         evaluator.compute_fscore(key_trees, predicted_trees)
         evaluator.output()
-    
+
     def help_eval(self):
-        print("Usage: eval path-to-key_file path-to-output_file \nEvalute the accuracy of a output trees compared to a key file.\n")
- 
+        print('''Usage: eval path-to-key_file path-to-output_file \n
+            Evalute the accuracy of a output trees compared to a key file.\n''')
+
     def do_bulk_parse(self, inp):
         i = inp.split()
         start = time()
@@ -76,9 +77,9 @@ class Prompt(Cmd):
                         print("Parsing with Earley algorithm")
                         tree = parser.parse_Earley(sentence)
                     tree_output.write(dumps(tree)+"\n")
-            
+
         print("Time: (%.2f)s\n" % (time() - start), file=stderr)
-    
+
     def help_bulk_parse(self):
         print("usage: bulk_parse path-to-GRAMMAR-file path-to-input-sentence path-to-output")
 
@@ -86,7 +87,7 @@ class Prompt(Cmd):
         self.algo = "CKY"
         print("Parsing algoritm is set to ", self.algo)
         self.prompt = 'cmd:' + self.algo + '>>'
-    
+
     def help_use_CKY(self):
         print("usage: use_CKY; this will switch the parse algorithm to CKY")
 
@@ -104,7 +105,7 @@ class Prompt(Cmd):
 
         start = time()
         grammar_file = "data/grammarfile" # this is default assumption
-        print("Loading grammar from " + grammar_file + " ...", file=stderr)    
+        print("Loading grammar from " + grammar_file + " ...", file=stderr)
         pcfg = PCFG()
         pcfg.load_model(grammar_file)
         parser = Parser(pcfg)
