@@ -7,6 +7,7 @@ from collections import defaultdict
 from pprint import pprint
 
 from mylib.tokenizer import PennTreebankTokenizer
+from mylib.earley import Earley
 
 def argmax(lst):
     return max(lst) if lst else (0.0, None)
@@ -23,12 +24,6 @@ def backtrace(back, bp):
     else:
         (C, C1, Min, Min) = back
         return [C, C1]
-
-def Earley(pcfg, norm_words):
-    # ADD YOUR CODE HERE
-    # IMPLEMENT EARLEY
-    pass
-
 
 def CKY(pcfg, norm_words):
     # NOTE: norm_words is a list of pairs (norm, word), where word is the word
@@ -92,8 +87,8 @@ class Parser:
         return tree
 
     def parse_Earley(self, sentence):
-        # TODO: implement Earley algorithm
-        tree = Earley(self.pcfg, self.normalize_sentence(sentence))
+        earley = Earley(self.pcfg, self.normalize_sentence(sentence))
+        tree = earley.parse()
         tree[0] = tree[0].split("|")[0]
         return tree
 

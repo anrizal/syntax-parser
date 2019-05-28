@@ -15,7 +15,7 @@ For Syntactic Parsing Project
 class Prompt(Cmd):
     def preloop(self):
         super(Prompt, self).preloop()
-        self.algo = "CKY"
+        self.algo = "Earley"
 
     prompt = 'cmd>> '
 
@@ -104,19 +104,20 @@ class Prompt(Cmd):
             return self.do_exit(inp)
 
         start = time()
-        grammar_file = "data/grammarfile" # this is default assumption
+        grammar_file = "data/debug_grammar.dat" # this is default assumption
         print("Loading grammar from " + grammar_file + " ...", file=stderr)
         pcfg = PCFG()
         pcfg.load_model(grammar_file)
         parser = Parser(pcfg)
 
+        test_sentence = 'Pierre Vinken will soon join the board .'
         print("Parsing sentences ...", file=stderr)
         if self.algo == "CKY":
             print("Parsing with CKY algorithm")
-            tree = parser.parse_CKY(inp)
+            tree = parser.parse_CKY(test_sentence)
         else:
             print("Parsing with Earley algorithm")
-            tree = parser.parse_Earley(inp)
+            tree = parser.parse_Earley(test_sentence)
         print(dumps(tree))
         print("Time: (%.2f)s\n" % (time() - start), file=stderr)
 

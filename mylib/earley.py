@@ -19,11 +19,13 @@ class State():
             dot_idx_s: The dot index in the scope of the whole sentence.
             dot_idx_r: The dot index in the scope of current state.
         '''
+        self.uid = 0
         self.lhs = lhs
         self.rhs = rhs
         self.start_idx = start_idx
         self.dot_idx_s = dot_idx_s
         self.dot_idx_r = dot_idx_r
+        self.backpointers = []
 
     def __eq__(self, other):
         if not isinstance(other, State):
@@ -39,7 +41,7 @@ class State():
         '''
         if self.is_completed():
             return None
-        return self.rhs[self.dot_idx_r + 1]
+        return self.rhs[self.dot_idx_r]
 
     def is_completed(self) -> bool:
         '''
@@ -49,14 +51,19 @@ class State():
         Returns:
             bool: True if it's completed, otherwise False.
         '''
-        return self.dot_idx_r > len(self.rhs)
+        return self.dot_idx_r >= len(self.rhs)
 
 class Chart():
     '''
     A Chart keeps tracks of all of the states during parsing
     '''
     def __init__(self):
+        '''
+        Initialize a chart. Will always create an initial state (ROOT->.S, [0, 0])
+        '''
+        initial_state = State('ROOT', ['S'], 0, 0, 0)
         self.__chart = []
+        self.enqueue(initial_state, 0)
 
     def enqueue(self, state_to_add: State, idx: int):
         '''
@@ -66,10 +73,15 @@ class Chart():
             state_to_add (State): The state to add.
             idx (int): The index to insert at.
         '''
-        states = self.__chart[idx]
-        for state in states:
-            if state == state_to_add:
-                return
+        states = []
+        if idx < len(self.__chart):
+            states = self.__chart[idx]
+            for state in states:
+                if state == state_to_add:
+                    return
+        else:
+            self.__chart.append(states)
+        state_to_add.uid = '{}/{}'.format(idx, len(states))
         states.append(state_to_add)
 
     def __getitem__(self, key):
@@ -79,9 +91,58 @@ class Earley():
     '''
     The Earley Parser
     '''
-    def __init__(self, pcfg: PCFG):
+    def __init__(self, pcfg: PCFG, sentence: str):
+        '''
+        Initialize an Earley parser
+
+        Args:
+            pcfg (PCFG): The pcfg grammar.
+            sentence (str): The sentence to parser
+        '''
         self.chart = Chart()
         self.pcfg = pcfg
+        self.sentence = sentence
+
+    def parse(self):
+        '''
+        Parse the setence inside.
+        '''
+        last_state = None
+        for i in range(len(self.sentence) + 1):
+            word = ''
+            inside_i = 0
+            if i < len(self.sentence):
+                (_, word) = self.sentence[i]
+            while inside_i < len(self.chart[i]):
+                state = self.chart[i][inside_i]
+                if state.is_completed():
+                    self.completer(state)
+                else:
+                    next_symbol = state.next_cat()
+                    if next_symbol in self.pcfg.POS:
+                        self.scanner(state, word)
+                    else:
+                        self.predictor(state)
+                inside_i += 1
+
+                if state.is_completed() and state.lhs == 'ROOT':
+                    last_state = state
+
+        return self.backtrace(last_state.backpointers[0])
+
+    def backtrace(self, backpointer: str):
+        '''
+        Backtrace the parsed tree.
+        '''
+        chart_row, chart_col = backpointer.split('/')
+        state = self.chart[int(chart_row)][int(chart_col)]
+        if len(state.rhs) == 1:
+            return [state.lhs, state.rhs[0]]
+        else:
+            result = [state.lhs]
+            for bp in state.backpointers:
+                result.append(self.backtrace(bp))
+            return result
 
     def predictor(self, state: State):
         '''
@@ -96,18 +157,18 @@ class Earley():
             state_to_add = State(next_symbol, list(rhs), j, j, 0)
             self.chart.enqueue(state_to_add, j)
 
-    def scanner(self, state: State):
+    def scanner(self, state: State, word: str):
         '''
         The scanner
 
         Args:
-            state (State): The state to be scanned
+            state (State): The state to be scanned.
+            word (str): The word to be scanned.
         '''
         next_symbol = state.next_cat()
-        if next_symbol in self.pcfg.POS:
-            word = self.pcfg.unary_rules[next_symbol]
+        if self.pcfg.q1[next_symbol, word] > 0:
             j = state.dot_idx_s
-            state_to_add = State(next_symbol, [word], j, j + 1, 0)
+            state_to_add = State(next_symbol, [word], j, j + 1, 1)
             self.chart.enqueue(state_to_add, j + 1)
 
     def completer(self, state: State):
@@ -120,10 +181,13 @@ class Earley():
         j = state.start_idx
         k = state.dot_idx_s
         for state_in_chart in self.chart[j]:
-            i = state_in_chart.start_idx
-            state_to_add = State(state_in_chart.lhs,
-                                 state_in_chart.rhs,
-                                 i,
-                                 k,
-                                 state_in_chart.dot_idx_r + 1)
-            self.chart.enqueue(state_to_add, k)
+            if state_in_chart.next_cat() == state.lhs:
+                i = state_in_chart.start_idx
+                state_to_add = State(state_in_chart.lhs,
+                                     state_in_chart.rhs,
+                                     i,
+                                     k,
+                                     state_in_chart.dot_idx_r + 1)
+                state_to_add.backpointers = list(state_in_chart.backpointers)
+                state_to_add.backpointers.append(state.uid)
+                self.chart.enqueue(state_to_add, k)
