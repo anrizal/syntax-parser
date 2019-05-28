@@ -3,7 +3,7 @@ from json import loads, dumps
 
 
 class PCFG:
-    RARE_WORD_COUNT = 0
+    RARE_WORD_COUNT = 5
 
     def __init__(self):
         self.q1 = defaultdict(float)
