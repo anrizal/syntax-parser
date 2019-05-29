@@ -104,13 +104,13 @@ class Prompt(Cmd):
             return self.do_exit(inp)
 
         start = time()
-        grammar_file = "data/dev_grammar.dat" # this is default assumption
+        grammar_file = "data/debug_grammar.dat" # this is default assumption
         print("Loading grammar from " + grammar_file + " ...", file=stderr)
         pcfg = PCFG()
         pcfg.load_model(grammar_file)
         parser = Parser(pcfg)
 
-        test_sentence = 'Pierre Vinken will soon join the board .'
+        test_sentence = 'Mr. Vinken is chairman of Elsevier N.V. , the Dutch publishing group .'
         print("Parsing sentences ...", file=stderr)
         if self.algo == "CKY":
             print("Parsing with CKY algorithm")

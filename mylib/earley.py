@@ -30,7 +30,11 @@ class State():
     def __eq__(self, other):
         if not isinstance(other, State):
             return False
-        return self.lhs == other.lhs and self.rhs == other.rhs
+        return self.lhs == other.lhs and \
+            self.rhs == other.rhs and \
+            self.start_idx == other.start_idx and \
+            self.dot_idx_s == other.dot_idx_s and \
+            self.dot_idx_r == other.dot_idx_r
 
     def next_cat(self) -> str:
         '''
