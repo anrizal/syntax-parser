@@ -69,14 +69,17 @@ class Prompt(Cmd):
         print("Parsing sentences ...", file=stderr)
         with open(i[2], "w") as tree_output:
             with open(i[1]) as input_sentences:
-                for sentence in input_sentences:
-                    if self.algo == "CKY":
-                        print("Parsing with CKY algorithm")
-                        tree = parser.parse_CKY(sentence)
-                    else:
-                        print("Parsing with Earley algorithm")
-                        tree = parser.parse_Earley(sentence)
-                    tree_output.write(dumps(tree)+"\n")
+                for idx, sentence in enumerate(input_sentences):
+                    try:
+                        if self.algo == "CKY":
+                            print("Parsing with CKY algorithm")
+                            tree = parser.parse_CKY(sentence)
+                        else:
+                            print("Parsing with Earley algorithm")
+                            tree = parser.parse_Earley(sentence)
+                        tree_output.write(dumps(tree)+"\n")
+                    except Exception:
+                        print('Problems at sentence no.', idx)
 
         print("Time: (%.2f)s\n" % (time() - start), file=stderr)
 
@@ -110,7 +113,7 @@ class Prompt(Cmd):
         pcfg.load_model(grammar_file)
         parser = Parser(pcfg)
 
-        test_sentence = 'Mr. Vinken is chairman of Elsevier N.V. , the Dutch publishing group .'
+        test_sentence = 'Dr. Talcott led a team of researchers from the National Cancer Institute and the medical schools of Harvard University and Boston University .'
         print("Parsing sentences ...", file=stderr)
         if self.algo == "CKY":
             print("Parsing with CKY algorithm")

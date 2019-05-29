@@ -8,7 +8,7 @@ class State():
     '''
     A State is something records the current grammar rule, the dot position and the span
     '''
-    def __init__(self, lhs: str, rhs: list, start_idx: int, dot_idx_s: int, dot_idx_r: int):
+    def __init__(self, lhs: str, rhs: list, start_idx: int, end_idx: int, dot_idx: int):
         '''
         Initialize a state.
 
@@ -16,15 +16,15 @@ class State():
             lhs (string): The left-hand symbol.
             rhs (list): The right-hand symbols in a list.
             start_idx: The start index of the state in the sentence.
-            dot_idx_s: The dot index in the scope of the whole sentence.
-            dot_idx_r: The dot index in the scope of current state.
+            end_idx: The dot index in the scope of the whole sentence.
+            dot_idx: The dot index in the scope of current state.
         '''
         self.uid = 0
         self.lhs = lhs
         self.rhs = rhs
         self.start_idx = start_idx
-        self.dot_idx_s = dot_idx_s
-        self.dot_idx_r = dot_idx_r
+        self.end_idx = end_idx
+        self.dot_idx = dot_idx
         self.backpointers = []
 
     def __eq__(self, other):
@@ -33,8 +33,8 @@ class State():
         return self.lhs == other.lhs and \
             self.rhs == other.rhs and \
             self.start_idx == other.start_idx and \
-            self.dot_idx_s == other.dot_idx_s and \
-            self.dot_idx_r == other.dot_idx_r
+            self.end_idx == other.end_idx and \
+            self.dot_idx == other.dot_idx
 
     def next_cat(self) -> str:
         '''
@@ -45,7 +45,7 @@ class State():
         '''
         if self.is_completed():
             return None
-        return self.rhs[self.dot_idx_r]
+        return self.rhs[self.dot_idx]
 
     def is_completed(self) -> bool:
         '''
@@ -55,7 +55,7 @@ class State():
         Returns:
             bool: True if it's completed, otherwise False.
         '''
-        return self.dot_idx_r >= len(self.rhs)
+        return self.dot_idx >= len(self.rhs)
 
 class Chart():
     '''
@@ -158,7 +158,7 @@ class Earley():
             state (State): The state to expand
         '''
         next_symbol = state.next_cat()
-        j = state.dot_idx_s
+        j = state.end_idx
         for rhs in self.pcfg.binary_rules[next_symbol]:
             state_to_add = State(next_symbol, list(rhs), j, j, 0)
             self.chart.enqueue(state_to_add, j)
@@ -173,7 +173,7 @@ class Earley():
         '''
         next_symbol = state.next_cat()
         if self.pcfg.q1[next_symbol, word] > 0:
-            j = state.dot_idx_s
+            j = state.end_idx
             state_to_add = State(next_symbol, [word], j, j + 1, 1)
             self.chart.enqueue(state_to_add, j + 1)
 
@@ -185,7 +185,7 @@ class Earley():
             state (State): The state to be completed
         '''
         j = state.start_idx
-        k = state.dot_idx_s
+        k = state.end_idx
         for state_in_chart in self.chart[j]:
             if state_in_chart.next_cat() == state.lhs:
                 i = state_in_chart.start_idx
@@ -193,7 +193,7 @@ class Earley():
                                      state_in_chart.rhs,
                                      i,
                                      k,
-                                     state_in_chart.dot_idx_r + 1)
+                                     state_in_chart.dot_idx + 1)
                 state_to_add.backpointers = list(state_in_chart.backpointers)
                 state_to_add.backpointers.append(state.uid)
                 self.chart.enqueue(state_to_add, k)
