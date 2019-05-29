@@ -79,7 +79,7 @@ class Prompt(Cmd):
                             tree = parser.parse_Earley(sentence)
                         tree_output.write(dumps(tree)+"\n")
                     except Exception:
-                        print('Problems at sentence no.', idx)
+                        print('Problems at sentence no.', idx + 1)
 
         print("Time: (%.2f)s\n" % (time() - start), file=stderr)
 
