@@ -113,7 +113,7 @@ class Prompt(Cmd):
         pcfg.load_model(grammar_file)
         parser = Parser(pcfg)
 
-        test_sentence = 'Dr. Talcott led a team of researchers from the National Cancer Institute and the medical schools of Harvard University and Boston University .'
+        test_sentence = 'Pierre Vinken will soon join the board .'
         print("Parsing sentences ...", file=stderr)
         if self.algo == "CKY":
             print("Parsing with CKY algorithm")

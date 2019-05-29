@@ -8,7 +8,7 @@ class State():
     '''
     A State is something records the current grammar rule, the dot position and the span
     '''
-    def __init__(self, lhs: str, rhs: list, start_idx: int, end_idx: int, dot_idx: int):
+    def __init__(self, lhs='', rhs=[], start_idx=0, end_idx=0, dot_idx=0):
         '''
         Initialize a state.
 
@@ -26,6 +26,7 @@ class State():
         self.end_idx = end_idx
         self.dot_idx = dot_idx
         self.backpointers = []
+        self.prob = 0
 
     def __eq__(self, other):
         if not isinstance(other, State):
@@ -66,6 +67,7 @@ class Chart():
         Initialize a chart. Will always create an initial state (ROOT->.S, [0, 0])
         '''
         initial_state = State('ROOT', ['S'], 0, 0, 0)
+        initial_state.prob = 1.0
         self.__chart = []
         self.enqueue(initial_state, 0)
 
@@ -111,7 +113,6 @@ class Earley():
         '''
         Parse the setence inside.
         '''
-        last_state = None
         for i in range(len(self.sentence) + 1):
             word = ''
             inside_i = 0
@@ -129,8 +130,12 @@ class Earley():
                         self.predictor(state)
                 inside_i += 1
 
-                if state.is_completed() and state.lhs == 'ROOT':
-                    last_state = state
+        last_state = State()
+        for state in self.chart[len(self.sentence)]:
+            if state.is_completed() and \
+                state.lhs == 'ROOT' and \
+                state.prob > last_state.prob:
+                last_state = state
 
         if last_state:
             return self.backtrace(last_state.backpointers[0])
@@ -161,6 +166,7 @@ class Earley():
         j = state.end_idx
         for rhs in self.pcfg.binary_rules[next_symbol]:
             state_to_add = State(next_symbol, list(rhs), j, j, 0)
+            state_to_add.prob = self.pcfg.q2[(next_symbol, *rhs)]
             self.chart.enqueue(state_to_add, j)
 
     def scanner(self, state: State, word: str):
@@ -175,6 +181,7 @@ class Earley():
         if self.pcfg.q1[next_symbol, word] > 0:
             j = state.end_idx
             state_to_add = State(next_symbol, [word], j, j + 1, 1)
+            state_to_add.prob = self.pcfg.q1[next_symbol, word]
             self.chart.enqueue(state_to_add, j + 1)
 
     def completer(self, state: State):
@@ -196,4 +203,5 @@ class Earley():
                                      state_in_chart.dot_idx + 1)
                 state_to_add.backpointers = list(state_in_chart.backpointers)
                 state_to_add.backpointers.append(state.uid)
+                state_to_add.prob = state_in_chart.prob * state.prob
                 self.chart.enqueue(state_to_add, k)
