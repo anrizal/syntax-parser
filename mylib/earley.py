@@ -128,14 +128,16 @@ class Earley():
                 if state.is_completed() and state.lhs == 'ROOT':
                     last_state = state
 
-        return self.backtrace(last_state.backpointers[0])
+        if last_state:
+            return self.backtrace(last_state.backpointers[0])
+        return ['']
 
     def backtrace(self, backpointer: str):
         '''
         Backtrace the parsed tree.
         '''
-        chart_row, chart_col = backpointer.split('/')
-        state = self.chart[int(chart_row)][int(chart_col)]
+        state_set, state_idx = backpointer.split('/')
+        state = self.chart[int(state_set)][int(state_idx)]
         if len(state.rhs) == 1:
             return [state.lhs, state.rhs[0]]
         else:
