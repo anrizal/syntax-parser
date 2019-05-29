@@ -8,7 +8,7 @@ class State():
     '''
     A State is something records the current grammar rule, the dot position and the span
     '''
-    def __init__(self, lhs='', rhs=[], start_idx=0, end_idx=0, dot_idx=0):
+    def __init__(self, lhs='', rhs=None, start_idx=0, end_idx=0, dot_idx=0):
         '''
         Initialize a state.
 
@@ -21,7 +21,10 @@ class State():
         '''
         self.uid = 0
         self.lhs = lhs
-        self.rhs = rhs
+        if rhs is None:
+            self.rhs = []
+        else:
+            self.rhs = rhs
         self.start_idx = start_idx
         self.end_idx = end_idx
         self.dot_idx = dot_idx
@@ -117,7 +120,7 @@ class Earley():
             word = ''
             inside_i = 0
             if i < len(self.sentence):
-                (_, word) = self.sentence[i]
+                norm, word = self.sentence[i]
             while inside_i < len(self.chart[i]):
                 state = self.chart[i][inside_i]
                 if state.is_completed():
@@ -125,7 +128,7 @@ class Earley():
                 else:
                     next_symbol = state.next_cat()
                     if next_symbol in self.pcfg.POS:
-                        self.scanner(state, word)
+                        self.scanner(state, norm, word)
                     else:
                         self.predictor(state)
                 inside_i += 1
@@ -169,19 +172,20 @@ class Earley():
             state_to_add.prob = self.pcfg.q2[(next_symbol, *rhs)]
             self.chart.enqueue(state_to_add, j)
 
-    def scanner(self, state: State, word: str):
+    def scanner(self, state: State, norm: str, word: str):
         '''
         The scanner
 
         Args:
             state (State): The state to be scanned.
+            norm (str): The normalized form of the word. It can be the word itself, or "_RARE_".
             word (str): The word to be scanned.
         '''
         next_symbol = state.next_cat()
-        if self.pcfg.q1[next_symbol, word] > 0:
+        if self.pcfg.q1[next_symbol, norm] > 0:
             j = state.end_idx
             state_to_add = State(next_symbol, [word], j, j + 1, 1)
-            state_to_add.prob = self.pcfg.q1[next_symbol, word]
+            state_to_add.prob = self.pcfg.q1[next_symbol, norm]
             self.chart.enqueue(state_to_add, j + 1)
 
     def completer(self, state: State):
