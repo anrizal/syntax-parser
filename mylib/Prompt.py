@@ -4,7 +4,7 @@ from time import time
 import sys, re, json
 from json import dumps
 from mylib.pcfg import PCFG
-from mylib.eval import ParseEvaluator
+from mylib.eval import ParseEvaluator, ParseError
 from mylib.parser import Parser
 
 '''
@@ -78,7 +78,7 @@ class Prompt(Cmd):
                             print("Parsing with Earley algorithm")
                             tree = parser.parse_Earley(sentence)
                         tree_output.write(dumps(tree)+"\n")
-                    except Exception:
+                    except ParseError:
                         print('Problems at sentence no.', idx + 1)
 
         print("Time: (%.2f)s\n" % (time() - start), file=stderr)

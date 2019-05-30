@@ -3,6 +3,7 @@ A module that implements the Earley Algorithm
 '''
 
 from mylib.pcfg import PCFG
+from mylib.eval import ParseError
 
 class State():
     '''
@@ -29,7 +30,8 @@ class State():
         self.end_idx = end_idx
         self.dot_idx = dot_idx
         self.backpointers = []
-        self.prob = 0
+        self.fwd_prob = 0
+        self.in_prob = 0
 
     def __eq__(self, other):
         if not isinstance(other, State):
@@ -70,7 +72,8 @@ class Chart():
         Initialize a chart. Will always create an initial state (ROOT->.S, [0, 0])
         '''
         initial_state = State('ROOT', ['S'], 0, 0, 0)
-        initial_state.prob = 1.0
+        initial_state.fwd_prob = 1.0
+        initial_state.in_prob = 1.0
         self.__chart = []
         self.enqueue(initial_state, 0)
 
@@ -95,6 +98,9 @@ class Chart():
 
     def __getitem__(self, key):
         return self.__chart[key]
+
+    def __len__(self):
+        return len(self.__chart)
 
 class Earley():
     '''
@@ -121,6 +127,8 @@ class Earley():
             inside_i = 0
             if i < len(self.sentence):
                 norm, word = self.sentence[i]
+            if i >= len(self.chart):
+                raise ParseError('Unable to parse sentence: {}'.format(self.sentence))
             while inside_i < len(self.chart[i]):
                 state = self.chart[i][inside_i]
                 if state.is_completed():
@@ -137,7 +145,7 @@ class Earley():
         for state in self.chart[len(self.sentence)]:
             if state.is_completed() and \
                 state.lhs == 'ROOT' and \
-                state.prob > last_state.prob:
+                state.in_prob > last_state.in_prob:
                 last_state = state
 
         if last_state:
@@ -169,7 +177,9 @@ class Earley():
         j = state.end_idx
         for rhs in self.pcfg.binary_rules[next_symbol]:
             state_to_add = State(next_symbol, list(rhs), j, j, 0)
-            state_to_add.prob = self.pcfg.q2[(next_symbol, *rhs)]
+            rule_prob = self.pcfg.q2[(next_symbol, *rhs)]
+            state_to_add.fwd_prob = state.fwd_prob * rule_prob
+            state_to_add.in_prob = rule_prob
             self.chart.enqueue(state_to_add, j)
 
     def scanner(self, state: State, norm: str, word: str):
@@ -185,7 +195,9 @@ class Earley():
         if self.pcfg.q1[next_symbol, norm] > 0:
             j = state.end_idx
             state_to_add = State(next_symbol, [word], j, j + 1, 1)
-            state_to_add.prob = self.pcfg.q1[next_symbol, norm]
+            rule_prob = self.pcfg.q1[next_symbol, norm]
+            state_to_add.fwd_prob = rule_prob
+            state_to_add.in_prob = rule_prob
             self.chart.enqueue(state_to_add, j + 1)
 
     def completer(self, state: State):
@@ -207,5 +219,6 @@ class Earley():
                                      state_in_chart.dot_idx + 1)
                 state_to_add.backpointers = list(state_in_chart.backpointers)
                 state_to_add.backpointers.append(state.uid)
-                state_to_add.prob = state_in_chart.prob * state.prob
+                state_to_add.fwd_prob = state_in_chart.fwd_prob * state.in_prob
+                state_to_add.in_prob = state_in_chart.in_prob * state.in_prob
                 self.chart.enqueue(state_to_add, k)
