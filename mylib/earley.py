@@ -32,6 +32,7 @@ class State():
         self.backpointers = []
         self.fwd_prob = 0
         self.in_prob = 0
+        self.word = ''
 
     def __eq__(self, other):
         if not isinstance(other, State):
@@ -135,7 +136,7 @@ class Earley():
                     self.completer(state)
                 else:
                     next_symbol = state.next_cat()
-                    if next_symbol in self.pcfg.POS:
+                    if self.pcfg.unary_rules[next_symbol]:
                         self.scanner(state, norm, word)
                     else:
                         self.predictor(state)
@@ -159,7 +160,7 @@ class Earley():
         state_set, state_idx = backpointer.split('/')
         state = self.chart[int(state_set)][int(state_idx)]
         if len(state.rhs) == 1:
-            return [state.lhs, state.rhs[0]]
+            return [state.lhs, state.word]
         else:
             result = [state.lhs]
             for bp in state.backpointers:
@@ -194,7 +195,8 @@ class Earley():
         next_symbol = state.next_cat()
         if self.pcfg.q1[next_symbol, norm] > 0:
             j = state.end_idx
-            state_to_add = State(next_symbol, [word], j, j + 1, 1)
+            state_to_add = State(next_symbol, [norm], j, j + 1, 1)
+            state_to_add.word = word
             rule_prob = self.pcfg.q1[next_symbol, norm]
             state_to_add.fwd_prob = rule_prob
             state_to_add.in_prob = rule_prob
