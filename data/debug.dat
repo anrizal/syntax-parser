@@ -1,1 +1,1 @@
-["S", ["NP", ["NNP", "Mr."], ["NNP", "Vinken"]], ["VP", ["VBZ", "is"], ["NP", ["NP", ["NN", "chairman"]], ["PP", ["IN", "of"], ["NP", ["NP", ["NNP", "Elsevier"], ["NNP", "N.V."]], [",", ","], ["NP", ["DT", "the"], ["NNP", "Dutch"], ["VBG", "publishing"], ["NN", "group"]]]]]], [".", "."]]
+["S", ["NP", ["NNP", "Pierre"], ["NNP", "Vinken"]], ["VP", ["MD", "will"], ["ADVP", ["RB", "soon"]], ["VP", ["VB", "join"], ["NP", ["DT", "the"], ["NN", "board"]]]], [".", "."]]
