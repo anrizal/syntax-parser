@@ -149,7 +149,7 @@ class Earley():
                 state.in_prob > last_state.in_prob:
                 last_state = state
 
-        if last_state:
+        if last_state and last_state.backpointers:
             return self.backtrace(last_state.backpointers[0])
         return ['']
 
@@ -184,7 +184,7 @@ class Earley():
             candidate.in_prob = rule_prob
             states_to_add.append(candidate)
 
-        states_to_add.sort(key=lambda x: x.in_prob, reverse=True)
+        states_to_add.sort(key=lambda x: x.fwd_prob, reverse=True)
         # Prune the tree to the top 10 list
         for candidate in states_to_add[:10]:
             self.chart.enqueue(candidate, j)

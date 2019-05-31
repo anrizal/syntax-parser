@@ -68,6 +68,7 @@ class Prompt(Cmd):
 
         print("Parsing sentences ...", file=stderr)
         with open(i[2], "w") as tree_output:
+            error_counter = 0
             with open(i[1]) as input_sentences:
                 for idx, sentence in enumerate(input_sentences):
                     try:
@@ -77,11 +78,14 @@ class Prompt(Cmd):
                         else:
                             print("Parsing with Earley algorithm at line no.", idx + 1)
                             tree = parser.parse_Earley(sentence)
-                        tree_output.write(dumps(tree)+"\n")
                     except ParseError:
                         print('Problems at line no.', idx + 1)
+                        tree = ['']
+                        error_counter += 1
+                    tree_output.write(dumps(tree)+"\n")
 
         print("Time: (%.2f)s\n" % (time() - start), file=stderr)
+        print('Failed parsings:', error_counter)
 
     def help_bulk_parse(self):
         print("usage: bulk_parse path-to-GRAMMAR-file path-to-input-sentence path-to-output")
