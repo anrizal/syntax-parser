@@ -74,10 +74,14 @@ class Prompt(Cmd):
                     try:
                         if self.algo == "CKY":
                             print("Parsing with CKY algorithm at line no.", idx + 1)
+                            s_start = time()
                             tree = parser.parse_CKY(sentence)
+                            print("Sucess parsing with CKY algorithm at line no.", idx + 1, "Time: (%.2f)s\n" % (time() - s_start), file=stderr)
                         else:
                             print("Parsing with Earley algorithm at line no.", idx + 1)
+                            s_start = time()
                             tree = parser.parse_Earley(sentence)
+                            print("Sucess parsing with Earley algorithm at line no.", idx + 1,  "Time: (%.2f)s\n" % (time() - s_start), file=stderr)
                     except ParseError:
                         print('Problems at line no.', idx + 1)
                         tree = ['']

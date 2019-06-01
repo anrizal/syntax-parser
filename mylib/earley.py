@@ -186,7 +186,7 @@ class Earley():
 
         states_to_add.sort(key=lambda x: x.fwd_prob, reverse=True)
         # Prune the tree to the top 10 list
-        for candidate in states_to_add[:10]:
+        for candidate in states_to_add[:15]:
             self.chart.enqueue(candidate, j)
 
     def scanner(self, state: State, norm: str, word: str):
