@@ -107,7 +107,7 @@ class Prompt(Cmd):
             return self.do_exit(inp)
 
         start = time()
-        grammar_file = "data/debug_grammar.dat" # this is default assumption
+        grammar_file = "data/train_grammar.dat" # this is default assumption
         print("Loading grammar from " + grammar_file + " ...", file=stderr)
         pcfg = PCFG()
         pcfg.load_model(grammar_file)
