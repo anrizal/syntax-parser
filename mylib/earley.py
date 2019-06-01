@@ -149,7 +149,7 @@ class Earley():
                 state.in_prob > last_state.in_prob:
                 last_state = state
 
-        if last_state:
+        if last_state and last_state.backpointers:
             return self.backtrace(last_state.backpointers[0])
         return ['']
 
@@ -176,12 +176,18 @@ class Earley():
         '''
         next_symbol = state.next_cat()
         j = state.end_idx
+        states_to_add = []
         for rhs in self.pcfg.binary_rules[next_symbol]:
-            state_to_add = State(next_symbol, list(rhs), j, j, 0)
+            candidate = State(next_symbol, list(rhs), j, j, 0)
             rule_prob = self.pcfg.q2[(next_symbol, *rhs)]
-            state_to_add.fwd_prob = state.fwd_prob * rule_prob
-            state_to_add.in_prob = rule_prob
-            self.chart.enqueue(state_to_add, j)
+            candidate.fwd_prob = state.fwd_prob * rule_prob
+            candidate.in_prob = rule_prob
+            states_to_add.append(candidate)
+
+        states_to_add.sort(key=lambda x: x.fwd_prob, reverse=True)
+        # Prune the tree to the top 10 list
+        for candidate in states_to_add[:15]:
+            self.chart.enqueue(candidate, j)
 
     def scanner(self, state: State, norm: str, word: str):
         '''
